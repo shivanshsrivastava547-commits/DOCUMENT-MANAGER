@@ -17,7 +17,7 @@ def get_rag_response(query: str) -> dict:
 
 def stream_rag_response(query: str) -> Iterator[str]:
     logger.info(f"[rag_service] Streaming query: '{query}'")
-    yield from _stream_rag_chain(query)
+    yield from stream_rag_chain(query)
 
 
 def ingest_file(file_path: str) -> dict:

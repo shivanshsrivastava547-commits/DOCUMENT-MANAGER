@@ -3,12 +3,13 @@ import json
 import re
 from pathlib import Path
 
-from ppt_planner_prompt import ppt_planner_prompt
-from excel_planner_prompt import excel_planner_prompt
-from pdf_report_planner_prompt import pdf_report_planner_prompt
-
-from LLM import llm
-from intelligent_rag_question_generator import question_generator_prompt
+from document_processor.config.llm import llm
+from document_processor.planners.ppt_planner import ppt_planner_prompt
+from document_processor.planners.excel_planner import excel_planner_prompt
+from document_processor.planners.pdf_planner import pdf_report_planner_prompt
+from document_processor.question_generation.question_generator import (
+    question_generator_prompt
+)
 
 from langchain_core.output_parsers import StrOutputParser
 

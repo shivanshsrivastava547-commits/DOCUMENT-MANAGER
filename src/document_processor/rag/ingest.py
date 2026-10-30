@@ -4,8 +4,8 @@ import os
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
-from RAG.config import settings
-from RAG.logger import logger
+from document_processor.config.settings import settings
+from document_processor.rag.logger import logger
 
 
 LOADERS = {

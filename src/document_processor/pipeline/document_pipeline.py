@@ -1,27 +1,39 @@
-
 import json
 import re
 from pathlib import Path
 
+from langchain_core.output_parsers import StrOutputParser
+
 from document_processor.config.llm import llm
-from document_processor.planners.ppt_planner import ppt_planner_prompt
-from document_processor.planners.excel_planner import excel_planner_prompt
-from document_processor.planners.pdf_planner import pdf_report_planner_prompt
+
+from document_processor.planners.ppt_planner import (
+    ppt_planner_prompt
+)
+from document_processor.planners.excel_planner import (
+    excel_planner_prompt
+)
+from document_processor.planners.pdf_planner import (
+    pdf_report_planner_prompt
+)
+
 from document_processor.question_generation.question_generator import (
     question_generator_prompt
 )
+from document_processor.question_generation.question_parser import (
+    QuestionListParser
+)
 
-from langchain_core.output_parsers import StrOutputParser
+from document_processor.rag.rag_service import (
+    get_rag_response
+)
 
-from question_parser import QuestionListParser
-from RAG.rag_service import get_rag_response
-
-from content_generation.content_generator import (
+from document_processor.content_generation.content_generator import (
     generate_document_content
 )
 
-from renderers.renderer_factory import render_document
-
+from document_processor.renderers.renderer_factory import (
+    render_document
+)
 
 # ======================================================
 # CONFIGURATION

@@ -1,5 +1,7 @@
 
-from renderers.renderer_factory import render_document
+from document_processor.renderers.renderer_factory import (
+    render_document
+)
 from pathlib import Path
 
 

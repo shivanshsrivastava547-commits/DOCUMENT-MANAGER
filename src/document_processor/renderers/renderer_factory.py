@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from renderers.pptx_renderer import render_pptx
-from renderers.excel_renderer import render_excel
-from renderers.pdf_renderer import render_pdf
+from document_processor.renderers.pptx_renderer import render_pptx
+from document_processor.renderers.excel_renderer import render_excel
+from document_processor.renderers.pdf_renderer import render_pdf
 
 
 def render_document(document_type, content):

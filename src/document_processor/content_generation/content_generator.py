@@ -1,13 +1,18 @@
-
 import json
-
 from langchain_core.output_parsers import StrOutputParser
+from document_processor.config.llm import llm
 
-from LLM import llm
+from document_processor.content_generation.prompts.ppt_prompt import (
+    ppt_content_prompt
+)
 
-from content_generation.ppt_content_prompt import ppt_content_prompt
-from content_generation.excel_content_prompt import excel_content_prompt
-from content_generation.pdf_content_prompt import pdf_content_prompt
+from document_processor.content_generation.prompts.excel_prompt import (
+    excel_content_prompt
+)
+
+from document_processor.content_generation.prompts.pdf_prompt import (
+    pdf_content_prompt
+)
 
 
 def select_content_prompt(document_type: str):

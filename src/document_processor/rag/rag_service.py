@@ -1,8 +1,13 @@
-from RAG.rag_chain import run_rag_chain
-from RAG.rag_chain import stream_rag_chain as _stream_rag_chain
-from RAG.ingest import ingest_document
-from RAG.logger import logger
 from typing import Iterator
+
+from document_processor.rag.rag_chain import (
+    run_rag_chain,
+    stream_rag_chain
+)
+
+from document_processor.rag.ingest import ingest_document
+
+from document_processor.rag.logger import logger
 
 
 def get_rag_response(query: str) -> dict:

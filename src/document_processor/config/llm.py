@@ -9,9 +9,9 @@ from langchain_groq import ChatGroq
 
 
 # Load the .env file located beside this Python file.
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+load_dotenv(PROJECT_ROOT / ".env")
 
 # Read project-specific configuration.
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")

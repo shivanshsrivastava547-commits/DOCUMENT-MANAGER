@@ -32,7 +32,7 @@ def get_document_llm() -> ChatGroq:
         api_key=GROQ_API_KEY,
         temperature=0,
         reasoning_effort="low",
-        max_tokens=4096,
+        max_tokens=2048,
     )
 
 

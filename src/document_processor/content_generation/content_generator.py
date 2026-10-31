@@ -1,6 +1,11 @@
 import json
+import time
 from langchain_core.output_parsers import StrOutputParser
 from document_processor.config.llm import llm
+
+MAX_RETRIES = 3
+RETRY_DELAY = 30
+MAX_RETRIEVED_INFO_CHARS = 3000
 
 from document_processor.content_generation.prompts.ppt_prompt import (
     ppt_content_prompt
@@ -42,13 +47,12 @@ def generate_document_content(
 
     selected_prompt = select_content_prompt(document_type)
 
-    # Preserve questions, answers and source metadata.
     retrieved_information_text = json.dumps(
         retrieved_information,
-        indent=2,
+        indent=None,
         ensure_ascii=False,
         default=str,
-    )
+    )[:MAX_RETRIEVED_INFO_CHARS]
 
     content_generation_chain = (
         selected_prompt
@@ -58,10 +62,20 @@ def generate_document_content(
 
     print("\n[INFO] Starting Content Generation LLM...")
 
-    final_content = content_generation_chain.invoke({
-        "user_prompt": user_prompt,
-        "retrieved_information": retrieved_information_text,
-    })
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            final_content = content_generation_chain.invoke({
+                "user_prompt": user_prompt[:1000],
+                "retrieved_information": retrieved_information_text,
+            })
+            break
+        except Exception as exc:
+            if "429" in str(exc) or "rate_limit" in str(exc).lower():
+                if attempt < MAX_RETRIES:
+                    print(f"[WARN] Rate limited. Waiting {RETRY_DELAY}s before retry {attempt + 1}/{MAX_RETRIES}...")
+                    time.sleep(RETRY_DELAY)
+                    continue
+            raise
 
     if not final_content or not final_content.strip():
         raise RuntimeError(

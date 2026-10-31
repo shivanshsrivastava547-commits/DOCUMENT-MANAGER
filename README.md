@@ -25,6 +25,7 @@ Rather than relying on a single LLM call to generate an entire document, the sys
 - [Testing](#testing)
 - [Output Structure](#output-structure)
 - [Current Limitations](#current-limitations)
+- [Deployment](#deployment)
 - [Future Improvements](#future-improvements)
 
 ---
@@ -84,8 +85,17 @@ Generate JSON-formatted content that can be consumed by format-specific renderin
 ### 8. Automated Document Rendering
 Create downloadable PowerPoint, PDF, and Excel files using dedicated Python libraries.
 
-### 9. Interactive Streamlit Interface
+### 9. Professional Document Styling
+An automatic enhancement layer applies professional styling to all generated documents — navy-themed headers, accent bars, zebra-striped tables, proper fonts, page numbers, and consistent color schemes across all three formats.
+
+### 10. Robust Error Handling
+Built-in retry logic with rate-limit awareness (3 retries, 30s delay), fallback content builder for JSON parsing failures, and UTF-8 encoding safety ensure the pipeline runs end-to-end without crashes.
+
+### 11. Interactive Streamlit Interface
 Upload source documents, configure generation requests, monitor the process, and download generated documents through a web interface.
+
+### 12. Cloud Deployment Ready
+Designed for deployment on Streamlit Community Cloud with secrets management and environment variable support.
 
 ---
 
@@ -471,36 +481,32 @@ The PowerPoint renderer:
 
 - Creates a new presentation.
 - Sets slide dimensions.
-- Creates slides.
-- Adds slide titles.
-- Adds content text boxes.
-- Applies basic text formatting.
+- Creates slides with titles and content.
+- **Enhancement layer** applies: dark navy title slide, white content slides, Calibri fonts (38pt/26pt/15pt), blue accent bars, and slide numbers.
 - Saves the `.pptx` file.
 
 ### PDF Renderer
 
 The PDF renderer:
 
-- Creates a PDF document.
-- Applies page margins.
-- Adds the report title.
-- Adds section headings.
-- Adds paragraphs.
-- Creates tables where supplied.
-- Applies basic table styling.
+- Creates a PDF document with custom margins.
+- **Enhancement layer** provides: centered title with accent underline, navy headings, justified body text, zebra-striped tables with navy headers, page numbers, and accent line at page top.
 - Saves the `.pdf` file.
 
 ### Excel Renderer
 
 The Excel renderer:
 
-- Creates an Excel workbook.
-- Creates worksheets.
-- Adds column headers.
-- Populates data rows.
-- Applies header formatting.
-- Adjusts column widths.
+- Creates an Excel workbook with worksheets.
+- Adds column headers and populates data rows.
+- **Enhancement layer** applies: navy headers with white text, zebra-striped rows, frozen header row, auto-fit columns, colored sheet tabs, and clean borders.
 - Saves the `.xlsx` file.
+
+### Document Enhancement System
+
+**Implementation:** `renderers/enhancer.py`
+
+The enhancer module monkey-patches all three renderers at import time via `document_processor/__init__.py`. This applies professional styling without modifying any original renderer code. All enhancements are wrapped in try/except so failures never break the pipeline.
 
 **Why use separate renderers?**
 
@@ -617,7 +623,8 @@ DOCUMENT-MANAGER/
         │   ├── renderer_factory.py
         │   ├── pptx_renderer.py
         │   ├── pdf_renderer.py
-        │   └── excel_renderer.py
+        │   ├── excel_renderer.py
+        │   └── enhancer.py
         │
         ├── design/
         │   └── design_planner.py
@@ -640,7 +647,7 @@ DOCUMENT-MANAGER/
 | `rag/` | Document ingestion, embeddings, retrieval, and RAG |
 | `content_generation/` | Final structured content generation |
 | `content_generation/prompts/` | Format-specific generation prompts |
-| `renderers/` | PDF, PPTX, and XLSX file generation |
+| `renderers/` | PDF, PPTX, and XLSX file generation with professional styling enhancement |
 | `pipeline/` | Orchestrates the complete generation workflow |
 | `design/` | Reserved for design-planning functionality |
 | `utils/` | Reserved for shared utility functionality |
@@ -664,10 +671,14 @@ The current project uses the following processing limits and settings.
 | Chunk size | 500 characters | Approximate text chunk length |
 | Chunk overlap | 50 characters | Context retained between adjacent chunks |
 | Embedding dimension | 384 | Vector size |
-| Default RAG top-k | 5 | Maximum chunks requested per question |
-| Maximum retrieval questions | 12 | Upper limit per generation request |
-| Maximum answer length | 1,200 characters | Per-answer limit |
-| Maximum retrieved context | 9,000 characters | Combined context budget |
+| Default RAG top-k | 4 | Maximum chunks requested per question |
+| Maximum retrieval questions | 5 | Upper limit per generation request |
+| Maximum answer length | 400 characters | Per-answer limit |
+| Maximum retrieved context | 3,000 characters | Combined context budget |
+| Maximum content plan | 2,000 characters | Content plan input cap |
+| Maximum user prompt | 1,000 characters | User prompt input cap |
+| LLM max tokens | 2,048 | Maximum tokens per LLM response |
+| Rate limit retries | 3 | Retry attempts with 30s delay on 429 errors |
 | Pinecone batch size | 100 vectors | Upload batch size |
 
 ### Approximate LLM Call Count
@@ -1044,25 +1055,49 @@ Uploaded documents are stored locally, while their processed vectors and associa
 
 The current version provides the complete core document-generation workflow, but some capabilities remain basic or are planned for future development.
 
-1. **Basic Document Styling:** The renderers currently support basic layouts, text formatting, tables, and worksheet formatting rather than advanced design systems.
+1. **Structured Output Validation:** JSON parsing checks the root structure and includes a fallback content builder, but does not yet enforce complete Pydantic schemas for every document type.
 
-2. **Structured Output Validation:** JSON parsing checks the root structure but does not yet enforce complete Pydantic schemas for every document type.
+2. **RAG Accuracy:** Retrieval quality depends on the uploaded documents, chunking configuration, embedding model, and relevance of generated questions.
 
-3. **RAG Accuracy:** Retrieval quality depends on the uploaded documents, chunking configuration, embedding model, and relevance of generated questions.
+3. **Source Attribution:** Source filenames are retained, but detailed claim-level citations and full evidence traceability can be improved.
 
-4. **Source Attribution:** Source filenames are retained, but detailed claim-level citations and full evidence traceability can be improved.
+4. **Embedding Configuration:** The embedding model is instantiated directly in ingestion and retrieval modules rather than being fully controlled through the central configuration.
 
-5. **Embedding Configuration:** The embedding model is instantiated directly in ingestion and retrieval modules rather than being fully controlled through the central configuration.
+5. **File Naming:** Generated filenames are currently fixed and can be overwritten by subsequent requests of the same format.
 
-6. **File Naming:** Generated filenames are currently fixed and can be overwritten by subsequent requests of the same format.
+6. **Testing Coverage:** Dedicated ingestion and full-pipeline tests remain to be implemented.
 
-7. **Testing Coverage:** Dedicated ingestion and full-pipeline tests remain to be implemented.
+7. **API Quotas:** Generation depends on external LLM API availability, model access, and usage limits. The system includes retry logic (3 attempts, 30s delay) for rate-limit errors.
 
-8. **Design Planning:** The design-planning module is currently a placeholder and does not yet provide an independent design-generation stage.
+8. **Token Budget:** Input sizes are capped to stay within the Groq free-tier limit (8,000 TPM). Larger documents or more detailed prompts may require a paid plan.
 
-9. **API Quotas:** Generation depends on external LLM API availability, model access, and usage limits.
+---
 
-10. **Knowledge Base Dependency:** The current generation workflow requires meaningful source-backed retrieval results. It is not designed as an unrestricted document writer without retrieved information.
+# Deployment
+
+## Streamlit Community Cloud
+
+The application is designed for deployment on [Streamlit Community Cloud](https://share.streamlit.io).
+
+### Steps
+
+1. Push the project to a GitHub repository.
+2. Sign in to [share.streamlit.io](https://share.streamlit.io) with your GitHub account.
+3. Select the repository and set the main file to `app.py`.
+4. Add environment variables in the **Secrets** section using TOML format:
+
+```toml
+GROQ_API_KEY = "your_groq_api_key"
+GROQ_MODEL = "openai/gpt-oss-20b"
+PINECONE_API_KEY = "your_pinecone_api_key"
+PINECONE_INDEX_NAME = "rag-index"
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+RAG_TOP_K = "4"
+```
+
+5. Deploy. The application reads secrets via `os.getenv()`, which is compatible with Streamlit Cloud's secrets management.
+
+**Note:** Never commit your `.env` file or API keys to the repository. The `.gitignore` file already excludes `.env`.
 
 ---
 
@@ -1075,15 +1110,15 @@ Potential future development directions include:
 - Advanced RAG retrieval using hybrid search and reranking.
 - Configurable embedding models.
 - Dynamic output filenames and generation history.
-- Advanced PowerPoint themes, layouts, and chart generation.
+- PowerPoint chart generation and advanced layout templates.
 - Excel formulas, charts, filters, and interactive dashboards.
-- Improved PDF styling, headers, footers, and table of contents.
+- PDF table of contents and multi-column layouts.
 - Real-time pipeline progress reporting.
 - Token usage and API cost tracking.
-- Retry mechanisms and improved error handling.
+- CSV file support for ingestion.
 - Automated ingestion and end-to-end pipeline tests.
 - More document formats, including Word documents.
-- Dedicated design-planning and validation agents.
+- Input validation and prompt sanitization.
 
 ---
 
@@ -1097,4 +1132,4 @@ The primary objective is not simply to generate text, but to transform user requ
 
 ---
 
-**Built with Python, LangChain, Groq, FastEmbed, Pinecone, and Streamlit.**
+**Built with Python, LangChain, Groq, FastEmbed, Pinecone, and Streamlit. Deployed on Streamlit Community Cloud.**
